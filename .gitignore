@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+# IDE files
+*.c*flags
+*.creator*
+*.config
+*.files
+*.includes
+*.pro.user
