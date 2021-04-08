@@ -8,21 +8,18 @@ std::vector<std::thread> System::tPool;
 std::mutex System::m;
 process System::currProc;
 TimePoint System::clock;
+bool System::end = false;
 
 void System::powerOff()
-{}
+{
+    end = true;
+    for (auto& thread : tPool) thread.join();
+}
 
 void System::eventLoop()
 {
     clock = std::chrono::steady_clock::now();
-    while(true)
-    {}
-}
 
-void System::addProcess(const std::string& name)
-{
-    std::lock_guard<std::mutex> lock(m);
-    newQ.push_front(process(name));
 }
 
 void System::addProcess(const process& p)
@@ -43,4 +40,10 @@ System& System::access()
         tPool.push_back(std::thread(System::eventLoop));
     }
 	return instance;
+}
+
+void System::destroyOne()
+{
+    std::lock_guard<std::mutex> lock(m);
+    newQ.pop_front();
 }

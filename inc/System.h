@@ -13,7 +13,7 @@ class System
 {
 private:
 	// only allow one system to exist
-    System(){}
+    System() = default;
 	
 	// disable moving and copying
 	System(const System&)            = delete;
@@ -26,18 +26,18 @@ private:
     static std::deque<process> ReadyQ;
     static std::deque<process> DiskQ;
 	static process currProc;
+    static bool end;
     static TimePoint clock;
     static std::vector<std::thread> tPool;
     static void eventLoop();
-    static void powerOff();
 
 public:
 	// provide a single point of access to the system
 	static System& access();
     ~System() = default;
-    
-	static void addProcess(const process&);
-	static void addProcess(const std::string&);	
+    static void destroyOne();
+    static void addProcess(const process&);
+    static void powerOff();
 };
 
 #endif

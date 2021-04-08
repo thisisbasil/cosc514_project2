@@ -1,11 +1,10 @@
 #include "System.h"
-#include <semaphore>
-using namespace std;
 
+using namespace std;
 
 int main()
 {
     System::access();
-    while(true);
+    System::powerOff();
     return 0;
 }

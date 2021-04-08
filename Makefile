@@ -1,5 +1,6 @@
-CC=clang++
-CPPFLAGS=-g -Wall -pthread -std=c++20 -stdlib=libc++ -I./inc 
+#CC=clang++
+CC=g++
+CPPFLAGS=-g -Wall -pthread -std=c++17 -I./inc -gdwarf-2 -gstrict-dwarf
 
 default: all
 

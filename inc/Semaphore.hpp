@@ -43,4 +43,6 @@ public:
 	}
 };
 
+using Binary_Semaphore = Semaphore<1>;
+
 #endif

@@ -6,8 +6,15 @@
 #include <string>
 #include <mutex>
 #include <chrono>
+#include "Semaphore.hpp"
+#include <memory>
 
 using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
+
+namespace
+{
+    Semaphore<10> proc_sem;
+}
 
 class PCB
 {
@@ -26,7 +33,14 @@ private:
 public:
 	PCB(const std::string& _name = "") 
     : currState (State::NEW), name(_name), number(procNum++),
-      startTime (std::chrono::steady_clock::now()) {}
+      startTime (std::chrono::steady_clock::now())
+    {
+        if (name.size() == 0) name = std::to_string(number);
+        proc_sem.wait();
+        std::cout << "created " << number << std::endl;
+    }
+
+    ~PCB() { proc_sem.signal(); std::cout << "destroyed " << number << std::endl;}
 
 	inline const State getState()       { return currState; }
 	inline const std::string& getName() { return name;      }
@@ -40,7 +54,6 @@ public:
 	PCB(PCB&&)					= default;		
 	PCB& operator=(const PCB&)  = default;
 	PCB& operator=(PCB&&)		= default;
-	~PCB()						= default;
 
 	friend std::ostream& operator<<(std::ostream& out, const PCB& toOutput)
 	{
@@ -54,13 +67,15 @@ public:
 		case State::TERMINATED: state = "terminated"; break;
 		};
 		out << "Process " << toOutput.name << ':' << std::endl
-			<< "\tState: " << state << std::endl
-			<< "\tProcess #: " << toOutput.number << std::endl
-			<< "\tPC #: " << toOutput.PC << std::endl << std::endl;
+            << "  State: " << state << std::endl
+            << "  Process #: " << toOutput.number << std::endl
+            << "  PC #: " << toOutput.PC;
 		return out;
 	}
 };
 
-using process = PCB;
+using process = std::shared_ptr<PCB>;
+
+process generate_process(const std::string& name = "");
 
 #endif
