@@ -1,63 +1,104 @@
 #ifndef PCB_H
 #define PCB_H
 
+// imports i/o streams e.g. cout, endl
 #include <iostream>
-#include <vector>
+
+// imports standard string
 #include <string>
-#include <mutex>
-#include <chrono>
+
+// imports custom semaphore, will probably be removed
+// if not needed
 #include "Semaphore.hpp"
-#include <memory>
 
-using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
+/* 
+   imports standard algorithms, simplifies things
+   like searching, finding, sorting
+   
+   reference: https://en.cppreference.com/w/cpp/algorithm
+   
+*/
+#include <algorithm>
 
-namespace
-{
-    Semaphore<10> proc_sem;
-}
+// use the standard namespace so we dont have to use
+// "std::" everywhere
+using namespace std;
 
+const unsigned num_procs = 10;
+
+
+// PCB class representing the particular processes
 class PCB
 {
 public:
+
+// an enumeration representing the various states that a process
+// can be in
 	enum class State { NEW, READY, RUNNING, WAITING, TERMINATED };
 
 private:
+
+// a static number representing the process number
 	static unsigned procNum;
 
+// the current state of the process
 	State currState;
-	std::string name;
+
+// the name of the process, may not be needed
+	string name;
+	
+// the process number, set in the constructor
 	unsigned number;
-    TimePoint startTime;
+
+// the program counter, unsure how this will
+// be used
 	unsigned long PC;
 
 public:
-	PCB(const std::string& _name = "") 
-    : currState (State::NEW), name(_name), number(procNum++),
-      startTime (std::chrono::steady_clock::now())
+    // using an inline constructor 
+	PCB(const string& _name = "") 
     {
-        if (name.size() == 0) name = std::to_string(number);
-        proc_sem.wait();
-        std::cout << "created " << number << std::endl;
+        // What should PC be initialized to?
+        currState = State::NEW;
+        name = _name;
+        number = procNum++;
     }
 
-    ~PCB() { proc_sem.signal(); std::cout << "destroyed " << number << std::endl;}
-
+// the destructor, defined in PCB.cpp
+    ~PCB();
+    
+// simple getter functions
 	inline const State getState()       { return currState; }
-	inline const std::string& getName() { return name;      }
+	inline const string& getName()      { return name;      }
 	inline const unsigned getProcNum()  { return number;    }
 	inline const unsigned long getPC()  { return PC;        }
     void getRunningTime();
 
-	// no dynamic memory, so no need to
-	// explicity define these
+// no dynamic memory, so no need to
+// explicity define these
 	PCB(const PCB&)				= default;
 	PCB(PCB&&)					= default;		
 	PCB& operator=(const PCB&)  = default;
 	PCB& operator=(PCB&&)		= default;
 
-	friend std::ostream& operator<<(std::ostream& out, const PCB& toOutput)
+/* 
+    This allows you to add it to output via any output stream
+    example:
+     
+    PCB aPCB;
+    // do something with PCB
+    cout << aPCB << endl;
+*/
+	friend ostream& operator<<(ostream& out, const PCB& toOutput)
 	{
-		std::string state;
+/* 
+       Out represents any out stream, in this case, it will
+       essentially represent outputting to stdout i.e. cout
+	       
+       I am guessing that this will change depending on how
+       we want to output
+*/
+		string state;
 		switch(toOutput.currState)
 		{
 		case State::NEW: state = "new"; break;
@@ -74,8 +115,7 @@ public:
 	}
 };
 
-using process = std::shared_ptr<PCB>;
-
-process generate_process(const std::string& name = "");
+// typedef process as PCB, can be used interchangably though
+using process = PCB;
 
 #endif

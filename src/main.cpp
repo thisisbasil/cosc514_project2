@@ -4,7 +4,6 @@ using namespace std;
 
 int main()
 {
-    System::access();
-    System::powerOff();
+    System cpu;
     return 0;
 }
