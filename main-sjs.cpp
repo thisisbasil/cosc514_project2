@@ -4,9 +4,13 @@
 
 #include <string>
 #include <iostream>
+#include <chrono>
 using namespace std;
 using namespace std::chrono; //clock
 #include <fstream> //ofstream/read in files
+#include <deque>
+#include <array>
+#include <iomanip>
 
 
 struct MemoryNode //node in a linked list
@@ -165,11 +169,14 @@ PCB* delPCBFromList(PCB *head)// deletea node from the front
 
 
 
-MemoryNode* InitHashTable(int HTSIZe, MemoryNode *hashtable[HTSIZe] )//InitHashTable() initializes the hash table
+MemoryNode* InitHashTable(int HTSIZe, array<MemoryNode*,10>& hashtable )
+//MemoryNode *hashtable[HTSIZe] )//InitHashTable() initializes the hash table
 {
-    for (int j=0;j<HTSIZe;j++)
+    //for (int j=0;j<HTSIZe;j++)
+    for(auto& j : hashtable)
     {
-        hashtable[j]=NULL;
+        //hashtable[j]=NULL;
+		j = nullptr;
     }
     return hashtable[HTSIZe];
 }
@@ -224,9 +231,15 @@ void createFiles()     //create files (for the 10 processes) to be opened and re
 
         myfile.open(file_name, ios::trunc);
         for (int j=1; j<101; j++)
-        { if (j>0 &&j<10) myfile<<token<<to_string(j)<<token<<to_string(j)<<token<<to_string(j)<<token<<to_string(j)<<token<<to_string(j)<<"\n";
-        else if (j==100) myfile<<token<<to_string(j)<<token<<to_string(j)<<token<<"1\n";
-        else  myfile<<token<<to_string(j)<<token<<to_string(j)<<token<<to_string(j)<<token<<"\n";
+        { 
+			if (j>0 &&j<10) 
+				myfile << token << to_string(j) << token << to_string(j) 
+                       << token << to_string(j) << token << to_string(j)
+                       << token << to_string(j) << endl;
+        	else if (j==100) 
+				myfile << token << to_string(j) << token << to_string(j) << token << '1' << endl;
+        	else  
+				myfile << token << to_string(j) << token << to_string(j) << token << to_string(j) << token<<"\n";
         }
         myfile.close();
     }
@@ -281,7 +294,8 @@ int main(int argc, const char * argv[]) {
     string lines="";
     
     int HTSIZe=10;
-    MemoryNode *hashtable[10];
+    //MemoryNode *hashtable[10];
+	array<MemoryNode*,10> hashtable;	
     hashtable[HTSIZe]=InitHashTable( HTSIZe, hashtable );
 
     //initially create the 10 processes and assign all of them to the Ready Queue
