@@ -14,13 +14,22 @@ using namespace std::chrono; //clock
 
 
 struct MemoryNode //node in a linked list
-    {   int pid;
+    {   
+		int pid;
         int pageNum;
         string readInChars;
         int StartLine;
         int EndLine;
-        double CPUtime;
+        double CPUtime;				
         MemoryNode *next;
+        
+        MemoryNode(int _pid, int _pageNum, const string& _readInChars,
+                   int _StartLine, int _EndLine, double _CPUtime, 
+				   MemoryNode* _next = nullptr) :
+				pid(_pid), pageNum(_pageNum), readInChars(_readInChars),
+                StartLine(_StartLine), EndLine(_EndLine), CPUtime(_CPUtime),
+                next(_next) {}
+        MemoryNode() = default;
     };
 
 
@@ -31,34 +40,36 @@ struct PCB
     int progrCounter; // the number of a line which is currenly being read in from the file
     MemoryNode *headMem;
     PCB *next;
+
+	PCB() = default;
+	PCB(int _pid, int _state, int _progrCounter, 
+        MemoryNode* _headMem = nullptr, PCB* _next = nullptr) :
+		pid(_pid), state(_state), progrCounter(_progrCounter),
+		headMem(_headMem), next(_next) {}
+    
+    friend ostream& operator<<(ostream& out, const PCB* other)
+    {
+        return out;
+    }
 };
 
 
 PCB* addPCBtoList(PCB *head, int pid, int state, int progrCounter, MemoryNode *headMem)//add a node at the end of the linked list
-    {   PCB *newnode, *p=NULL;
+    {   
+		PCB *newnode, *p=nullptr;
         
-        newnode = new PCB;
+        newnode = new PCB(pid, state, progrCounter, headMem);
         
-        if (head==NULL) //adding a node if it is the first node
+        if (head == nullptr) //adding a node if it is the first node
         {
             head=newnode;
-            newnode->next=NULL;
-            newnode->pid=pid;
-            newnode->state=state;
-            newnode->progrCounter=progrCounter;
-            newnode->headMem=headMem; // to be checked what it is
             p= head;
         }
         
-        else if (head !=NULL) //adding a node after the 1st node
+        else if (head != nullptr) //adding a node after the 1st node
         {   p=head;
-            while (p->next!=NULL) {p=p->next;}  //traverse to the end
-            newnode->next=NULL;//
+            while (p->next != nullptr) p = p->next;  //traverse to the end
             p->next=newnode;//
-            newnode->pid=pid;
-            newnode->state=state;
-            newnode->progrCounter=progrCounter;
-            newnode->headMem=headMem; // to be checked what it is
             p=head;
         }
         return p;
@@ -67,33 +78,19 @@ PCB* addPCBtoList(PCB *head, int pid, int state, int progrCounter, MemoryNode *h
 
 
 MemoryNode* addMemNodetoList(MemoryNode *head, int pid, int pageNum, string readInChars, int StartLine, int  EndLine, double CPUtime)
-    {   MemoryNode *newnode, *p=NULL;
-        newnode = new MemoryNode;
+    {   MemoryNode *newnode, *p = nullptr;
+	 	newnode = new MemoryNode(pid,pageNum,readInChars, StartLine, EndLine, CPUtime);
         
-        if (head==NULL) //adding a node if it is the first node
+        if (head == nullptr) //adding a node if it is the first node
         {
-            head=newnode;
-            newnode->next=NULL;
-            newnode->pid=pid;
-            newnode->pageNum=pageNum;
-            newnode->readInChars=readInChars;
-            newnode->StartLine=StartLine;
-            newnode->EndLine=EndLine;
-            newnode->CPUtime=CPUtime;
+			head = newnode;
             p= head;
         }
         
-        else if (head !=NULL) //adding a node after the 1st node
+        else if (head != nullptr) //adding a node after the 1st node
         {   p=head;
-            while (p->next!=NULL) {p=p->next;}  //traverse to the end
-            newnode->next=NULL;//
+            while (p->next != nullptr) p=p->next;  //traverse to the end
             p->next=newnode;//
-            newnode->pid=pid;
-            newnode->pageNum=pageNum;
-            newnode->readInChars=readInChars;
-            newnode->StartLine=StartLine;
-            newnode->EndLine=EndLine;
-            newnode->CPUtime=CPUtime;
             p=head;
         }
         return p;
@@ -107,9 +104,9 @@ string printPCB(PCB* head)//print a list consisting of PCBs
         p=head;
         int index=0;
 
-        if (p==NULL) {out="E";return out;}
+        if (p==nullptr) {out="E";return out;}
         else{
-            while (p->next!=NULL)
+            while (p->next!=nullptr)
             {   out+=to_string(p->pid); out+="->";
                 p=p->next; index++;
                 }
@@ -124,10 +121,10 @@ void printMemNodes(MemoryNode* head)//print the list
         MemoryNode  *p=head;
         int index=0;
 
-        if (p==NULL) {cout<<"E"; return;}//Empty
+        if (p==nullptr) {cout<<"E"; return;}//Empty
         else
         { cout<<"\n";
-            while (p->next!=NULL)
+            while (p->next!=nullptr)
             {
                 cout<<"pid: "<<p->pid<<" PageNum "<<p->pageNum<<" contains " <<p->readInChars<<" in lines " <<p->StartLine <<"-" << p->EndLine <<" read at " <<p->CPUtime<<"\n";
                 p=p->next; index++;
@@ -147,15 +144,15 @@ PCB* delPCBFromList(PCB *head)// deletea node from the front
 {
     PCB *q=head;
 
-    if (head==NULL)
+    if (head==nullptr)
         {cout << "Nothing to delete."; return head;}
     
-    else if (q->next==NULL ) // it is a 1-node list
+    else if (q->next==nullptr ) // it is a 1-node list
     {
-        q=NULL; delete q; head=NULL; delete head; return NULL;
+        q=nullptr; delete q; head=nullptr; delete head; return nullptr;
     }
     
-    else if (q->next!=NULL )
+    else if (q->next!=nullptr )
     {
         head=q->next;
         delete q;
@@ -170,12 +167,9 @@ PCB* delPCBFromList(PCB *head)// deletea node from the front
 
 
 MemoryNode* InitHashTable(int HTSIZe, array<MemoryNode*,10>& hashtable )
-//MemoryNode *hashtable[HTSIZe] )//InitHashTable() initializes the hash table
 {
-    //for (int j=0;j<HTSIZe;j++)
     for(auto& j : hashtable)
     {
-        //hashtable[j]=NULL;
 		j = nullptr;
     }
     return hashtable[HTSIZe];
@@ -184,17 +178,16 @@ MemoryNode* InitHashTable(int HTSIZe, array<MemoryNode*,10>& hashtable )
 
 
 
-
 int sizeList(PCB *head) //find the size of the list
 {   int sizeList=0;
     PCB *p;
 
-    if (head==NULL) {return 0;} //list is empty, return 0
-    else if (head->next==NULL) {return 1;} //size=1
+    if (head==nullptr) {return 0;} //list is empty, return 0
+    else if (head->next==nullptr) {return 1;} //size=1
     
     p=head;
     sizeList=1; //starting with the first node; size=1
-    while (p->next!=NULL)
+    while (p->next!=nullptr)
     {
         sizeList++; //traverse the list, incr. the size
         p=p->next;
@@ -204,19 +197,10 @@ int sizeList(PCB *head) //find the size of the list
 }
 
 
-string determineToken(int procNum)//used in createFiles() only
-{   string token="";
-    if(procNum==1) token="A"; //process 1
-    else if(procNum==2) token="B";//process 2, etc
-    else if(procNum==3) token="C";
-    else if(procNum==4) token="D";
-    else if(procNum==5) token="E";
-    else if(procNum==6) token="F";
-    else if(procNum==7) token="G";
-    else if(procNum==8) token="H";
-    else if(procNum==9) token="I";
-    else if(procNum==10) token="J";
-    return token;
+// code for A is 65, so have a base of 64 
+inline char determineToken(int procNum)//used in createFiles() only
+{   
+	return static_cast<char>(64+procNum);
 }
 
 void createFiles()     //create files (for the 10 processes) to be opened and read in later
@@ -246,8 +230,6 @@ void createFiles()     //create files (for the 10 processes) to be opened and re
 }
 
 
-
-
 string readLineNFile(string file_name, int startLine, int endLine)
 {
     string readInOneLine;
@@ -270,7 +252,6 @@ string readLineNFile(string file_name, int startLine, int endLine)
 }
 
 
-
 void printInstanceForTable(PCB * hReady,PCB *hCPU,PCB *hWait,PCB *hdisk,PCB *hDone, double time)
 {
     cout<<"\n";
@@ -284,10 +265,8 @@ void printInstanceForTable(PCB * hReady,PCB *hCPU,PCB *hWait,PCB *hdisk,PCB *hDo
     
 }
 
-
-
 int main(int argc, const char * argv[]) {
-    PCB * hReady=NULL, *hCPU=NULL, *hWait=NULL, *hDisk=NULL, *hDone=NULL;
+    PCB * hReady=nullptr, *hCPU=nullptr, *hWait=nullptr, *hDisk=nullptr, *hDone=nullptr;
     
     createFiles(); //create 10 files for the 10 processes, to be read in later in the program
     string file_name="";
@@ -326,13 +305,13 @@ int main(int argc, const char * argv[]) {
         steady_clock::time_point t2 = steady_clock::now();
         duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
         double time_span_count=time_span.count();
-        if (hDisk!=NULL)
+        if (hDisk!=nullptr)
     {
         hReady=addPCBtoList(hReady, hDisk->pid, 1,hDisk->progrCounter, hDisk->headMem); //add to Ready
         hDisk=delPCBFromList(hDisk); //rem from Disk
     }
      
-    if(hWait!=NULL && hDisk==NULL)
+    if(hWait!=nullptr && hDisk==nullptr)
         {   hDisk=addPCBtoList(hDisk, hWait->pid, 4,hWait->progrCounter, hWait->headMem); //add to Disk
             hWait=delPCBFromList(hWait); //rem from Wait
 
@@ -341,10 +320,10 @@ int main(int argc, const char * argv[]) {
             file_name=""; file_name+="proc"; file_name+=to_string(hDisk->pid); file_name+=".txt";
             
             int Startline=0, EndLine=0, PageNum=0;
-            if (p==NULL) { Startline=1; PageNum=0;}
-            else if (p->next==NULL){Startline=p-> EndLine+1; PageNum=p->pageNum+1;}
+            if (p==nullptr) { Startline=1; PageNum=0;}
+            else if (p->next==nullptr){Startline=p-> EndLine+1; PageNum=p->pageNum+1;}
             else
-            { while (p->next!=NULL) { p=p->next;}
+            { while (p->next!=nullptr) { p=p->next;}
             Startline=p-> EndLine+1;PageNum=p->pageNum+1;}
             EndLine=Startline+7;
             
@@ -357,18 +336,18 @@ int main(int argc, const char * argv[]) {
             else if (EndLine>101)hDisk->progrCounter=100;
         }
        
-    if (hCPU!=NULL && hCPU->progrCounter!=100) //not done
+    if (hCPU!=nullptr && hCPU->progrCounter!=100) //not done
     {
         hWait=addPCBtoList(hWait, hCPU->pid, 3,hCPU->progrCounter, hCPU->headMem); //add to Wait
         hCPU=delPCBFromList(hCPU); //rem from CPU
     }
    
-    if (hCPU!=NULL && hCPU->progrCounter>=100) //done
+    if (hCPU!=nullptr && hCPU->progrCounter>=100) //done
         {
             hDone=addPCBtoList(hDone, hCPU->pid, 5,hCPU->progrCounter, hCPU->headMem); //add to Done
             hCPU=delPCBFromList(hCPU); //rem from CPU
         }
-     if (hCPU==NULL && hReady!=NULL)
+     if (hCPU==nullptr && hReady!=nullptr)
      {
          hCPU=addPCBtoList(hCPU, hReady->pid, 2,hReady->progrCounter, hReady->headMem); //add to CPU
          hReady=delPCBFromList(hReady); //rem from Read
