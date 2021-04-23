@@ -267,7 +267,9 @@ void printInstanceForTable(PCB * hReady,PCB *hCPU,PCB *hWait,PCB *hdisk,PCB *hDo
 
 int main(int argc, const char * argv[]) {
     PCB * hReady=nullptr, *hCPU=nullptr, *hWait=nullptr, *hDisk=nullptr, *hDone=nullptr;
-    
+   
+	deque<PCB> readyQ, cpuQ, waitQ, diskQ, doneQ, memQ;
+ 
     createFiles(); //create 10 files for the 10 processes, to be read in later in the program
     string file_name="";
     string lines="";
@@ -280,8 +282,9 @@ int main(int argc, const char * argv[]) {
     //initially create the 10 processes and assign all of them to the Ready Queue
     for (int k=1; k<11; k++)
     {
-        hReady=addPCBtoList(hReady, k, 1, 0, hashtable[k-1]); //pid, state, progrCounter, ptr to MemList
-
+        //hReady=addPCBtoList(hReady, k, 1, 0, hashtable[k-1]); //pid, state, progrCounter, ptr to MemList
+		PCB temp { k, 0, 0, hashtable[k-1] };
+		readyQ.push_back(temp);
     }
     
     
@@ -305,13 +308,25 @@ int main(int argc, const char * argv[]) {
         steady_clock::time_point t2 = steady_clock::now();
         duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
         double time_span_count=time_span.count();
-        if (hDisk!=nullptr)
+/*        if (hDisk!=nullptr)
     {
         hReady=addPCBtoList(hReady, hDisk->pid, 1,hDisk->progrCounter, hDisk->headMem); //add to Ready
         hDisk=delPCBFromList(hDisk); //rem from Disk
-    }
+    }*/
+		if (diskQ.size() != 0)
+		{
+			if (diskQ.size() == 0) cout << "Nothing to delete.";
+			else
+			{
+				PCB temp { diskQ.front().pid, 1, diskQ.front().progrCounter, 
+						   diskQ.front().headMem };
+				readyQ.push_back(temp);
+				diskQ.pop_front();
+			}	
+			
+		}
      
-    if(hWait!=nullptr && hDisk==nullptr)
+    /*if(hWait!=nullptr && hDisk==nullptr)
         {   hDisk=addPCBtoList(hDisk, hWait->pid, 4,hWait->progrCounter, hWait->headMem); //add to Disk
             hWait=delPCBFromList(hWait); //rem from Wait
 
@@ -334,29 +349,77 @@ int main(int argc, const char * argv[]) {
             //In the PCB of the process, adjust the program counter
             if (EndLine<=100) hDisk->progrCounter=EndLine;
             else if (EndLine>101)hDisk->progrCounter=100;
-        }
+        }*/
+	if (waitQ.size() != 0 && diskQ.size() == 0)
+	{
+		PCB temp { waitQ.front().pid, 4, waitQ.front().progrCounter,
+				   waitQ.front().headMem };
+		waitQ.pop_front();
+		diskQ.push_back(temp);
+
+		MemoryNode* p = hashtable[diskQ.front().pid - 1];
+		file_name.clear();
+		file_name = "proc" + to_string(diskQ.front().pid) + ".txt";
+
+		int Startline = 0, Endline = 0, Pagenum = 0;
+
+		// REALLY NEED TO THINK ABOUT HOW THE MEMORY LIST IS IMPLEMENTED
+		if (memQ.size() == 0) { Startline = 1; Pagenum = 0; }
+		else if (1) 
+		{ 
+			//Startline = p->Endline+1; 
+			//Pagenum = p->pageNum + 1;
+		}
+		else
+		{
+			while (p->next != nullptr) p = p->next;
+			//Startline = p->				
+		}
+	}
        
-    if (hCPU!=nullptr && hCPU->progrCounter!=100) //not done
+    /*if (hCPU!=nullptr && hCPU->progrCounter!=100) //not done
     {
         hWait=addPCBtoList(hWait, hCPU->pid, 3,hCPU->progrCounter, hCPU->headMem); //add to Wait
         hCPU=delPCBFromList(hCPU); //rem from CPU
-    }
+    }*/
+	if (cpuQ.size() && cpuQ.front().progrCounter != 100)
+	{
+		PCB temp { cpuQ.front().pid, 3, cpuQ.front().progrCounter, 
+				   cpuQ.front().headMem };
+		cpuQ.pop_front();
+		waitQ.push_back(temp);
+	}
    
-    if (hCPU!=nullptr && hCPU->progrCounter>=100) //done
+    /*if (hCPU!=nullptr && hCPU->progrCounter>=100) //done
         {
             hDone=addPCBtoList(hDone, hCPU->pid, 5,hCPU->progrCounter, hCPU->headMem); //add to Done
             hCPU=delPCBFromList(hCPU); //rem from CPU
-        }
-     if (hCPU==nullptr && hReady!=nullptr)
+        }*/
+
+	 if (cpuQ.size() && cpuQ.front().progrCounter >= 100)
+	 {
+		PCB temp { cpuQ.front().pid, 5, cpuQ.front().progrCounter,
+				   cpuQ.front().headMem };
+		cpuQ.pop_front();
+		doneQ.push_back(temp);
+	 }
+
+     /*if (hCPU==nullptr && hReady!=nullptr)
      {
          hCPU=addPCBtoList(hCPU, hReady->pid, 2,hReady->progrCounter, hReady->headMem); //add to CPU
          hReady=delPCBFromList(hReady); //rem from Read
-     }
-        
-        printInstanceForTable(hReady,hCPU,hWait,hDisk,hDone, time_span_count);
+     }*/
+     if (cpuQ.size() == 0 && readyQ.size())
+	 {
+		PCB temp { readyQ.front().pid, 2, readyQ.front().progrCounter,
+				   readyQ.front().headMem };
+		readyQ.pop_front();
+		cpuQ.push_back(temp);
+	 } 
+        //printInstanceForTable(hReady,hCPU,hWait,hDisk,hDone, time_span_count);
 
-        if  (sizeList(hDone)==10) break; //break when all are  Done
-
+        //if  (sizeList(hDone)==10) break; //break when all are  Done
+		if (doneQ.size() == 10) break;
     } //end Pipeline
 
     
