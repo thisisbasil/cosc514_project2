@@ -214,23 +214,6 @@ string readLineNFile(string file_name, int startLine, int endLine)
     return lines;
 }
 
-void addToHashTable(array<shared_ptr<MemoryNode>, 10>& hashtable, int idx, const MemoryNode& mn)
-{
-    shared_ptr<MemoryNode> newnode = make_shared<MemoryNode>(mn);
-    if (hashtable[idx] == nullptr)
-    {
-        hashtable[idx] = newnode;
-    }
-    else
-    {
-        shared_ptr<MemoryNode> temp = hashtable[idx];
-        while (temp->next != nullptr) temp = temp->next;
-        newnode->prev = temp;
-        temp->next = newnode;
-    }
-}
-
-//void printInstanceForTable(PCB * hReady,PCB *hCPU,PCB *hWait,PCB *hdisk,PCB *hDone, double time)
 void printInstanceForTable(const list<PCB>& ready, const list<PCB>& cpu, const list<PCB>& wait,
                            const list<PCB>& disk, const list<PCB>& done, double time)
 {
@@ -284,8 +267,8 @@ int main(int argc, const char * argv[]) {
 
         if (disk.count > 0)
         {
-            PCB temp(disk.front->pid, 1, disk.front->progrCounter,
-                     disk.front->headMem);
+            PCB temp { disk.front->pid, 1, disk.front->progrCounter,
+                     disk.front->headMem };
             ready.add_back(temp);
             disk.remove_front();
 
@@ -298,11 +281,8 @@ int main(int argc, const char * argv[]) {
             wait.remove_front();
             disk.add_back(temp);
 
-            shared_ptr<MemoryNode> p = hashtable[disk.front->pid - 1].front;
             file_name.clear();
-            file_name = "proc";
-            file_name += to_string(disk.front->pid);
-            file_name += ".txt";
+            file_name = "proc"  + to_string(disk.front->pid) + ".txt";
 
             int Startline = 0, Endline = 0, Pagenum = 0;
             if (hashtable[disk.front->pid - 1].front == nullptr)
@@ -312,8 +292,8 @@ int main(int argc, const char * argv[]) {
             }
             else if (hashtable[disk.front->pid - 1].front->next == nullptr)
             {
-                Startline = p->EndLine + 1;
-                Pagenum = p->pageNum + 1;
+                Startline = hashtable[disk.front->pid - 1].front->EndLine + 1;
+                Pagenum = hashtable[disk.front->pid - 1].front->pageNum + 1;
             }
             else 
             {
@@ -364,9 +344,8 @@ int main(int argc, const char * argv[]) {
     cout<<"\n\nThe contents of the memory for each process-------------------------------------------------------------------------";
     for (int j=0;j<10;j++)
     {
-        shared_ptr<MemoryNode> p=hashtable[j].front;
         cout<<"\n";
-        printMemNodes(p);
+        printMemNodes(hashtable[j].front);
     }
 
 
