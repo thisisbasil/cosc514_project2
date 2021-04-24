@@ -160,15 +160,6 @@ void printMemNodes(shared_ptr<MemoryNode> head)//print the list
 
     }
 
-void InitHashTable(int HTSIZe, array<shared_ptr<MemoryNode>,10>& hashtable, shared_ptr<MemoryNode>& retval )
-{
-    for(auto& j : hashtable)
-    {
-        j = nullptr;
-    }
-   retval = hashtable[HTSIZe];
-}
-
 // code for A is 65, so have a base of 64
 inline char determineToken(int procNum)//used in createFiles() only
 {
@@ -223,16 +214,16 @@ string readLineNFile(string file_name, int startLine, int endLine)
     return lines;
 }
 
-void addToHashTable(array<shared_ptr<MemoryNode>, 10>& ht, int idx, const MemoryNode& mn)
+void addToHashTable(array<shared_ptr<MemoryNode>, 10>& hashtable, int idx, const MemoryNode& mn)
 {
     shared_ptr<MemoryNode> newnode = make_shared<MemoryNode>(mn);
-    if (ht[idx] == nullptr)
+    if (hashtable[idx] == nullptr)
     {
-        ht[idx] = newnode;
+        hashtable[idx] = newnode;
     }
     else
     {
-        shared_ptr<MemoryNode> temp = ht[idx];
+        shared_ptr<MemoryNode> temp = hashtable[idx];
         while (temp->next != nullptr) temp = temp->next;
         newnode->prev = temp;
         temp->next = newnode;
@@ -261,13 +252,11 @@ int main(int argc, const char * argv[]) {
     string file_name, lines;
 
     int HTSIZe=10;
-    //array<shared_ptr<MemoryNode>,10> hashtable;
-    //InitHashTable( HTSIZe, hashtable, hashtable[HTSIZe]);
-	array<list<MemoryNode>,10> ht;
+	array<list<MemoryNode>,10> hashtable;
     //initially create the 10 processes and assign all of them to the Ready Queue
     for (int k=1; k<11; k++)
     {
-        PCB temp { k, 0, 0, ht[k-1].front };
+        PCB temp { k, 0, 0, hashtable[k-1].front };
         ready.add_back(temp);
     }
 
@@ -309,39 +298,34 @@ int main(int argc, const char * argv[]) {
             wait.remove_front();
             disk.add_back(temp);
 
-            //shared_ptr<MemoryNode> p = hashtable[disk.front->pid - 1];
-            shared_ptr<MemoryNode> p = ht[disk.front->pid - 1].front;
+            shared_ptr<MemoryNode> p = hashtable[disk.front->pid - 1].front;
             file_name.clear();
             file_name = "proc";
             file_name += to_string(disk.front->pid);
             file_name += ".txt";
 
             int Startline = 0, Endline = 0, Pagenum = 0;
-            if (p == nullptr)
+            if (hashtable[disk.front->pid - 1].front == nullptr)
             {
                 Startline = 1;
                 Pagenum = 0;
             }
-            else if (p->next == nullptr)
+            else if (hashtable[disk.front->pid - 1].front->next == nullptr)
             {
                 Startline = p->EndLine + 1;
                 Pagenum = p->pageNum + 1;
             }
             else 
             {
-                while (p->next != nullptr) p = p->next;
                 
-                Startline = p->EndLine + 1;
-                Pagenum = p->pageNum + 1;
+                Startline = hashtable[disk.front->pid - 1].back->EndLine + 1;
+                Pagenum = hashtable[disk.front->pid - 1].back->pageNum + 1;
                 Endline = Startline + 7;
             }
 
             lines.clear();
             lines = readLineNFile(file_name, Startline, Endline);
-            //addToHashTable(hashtable,disk.front->pid - 1, MemoryNode(disk.front->pid, Pagenum,
-            //                                                         lines, Startline, Endline,
-            //                                                        time_span_count));
-            ht[disk.front->pid - 1].add_back(MemoryNode(disk.front->pid, Pagenum,
+            hashtable[disk.front->pid - 1].add_back(MemoryNode(disk.front->pid, Pagenum,
                                                         lines, Startline, Endline,
                                                         time_span_count));
             //In the PCB of the process, adjust the program counter
@@ -380,8 +364,7 @@ int main(int argc, const char * argv[]) {
     cout<<"\n\nThe contents of the memory for each process-------------------------------------------------------------------------";
     for (int j=0;j<10;j++)
     {
-        //shared_ptr<MemoryNode> p=hashtable[j];
-        shared_ptr<MemoryNode> p=ht[j].front;
+        shared_ptr<MemoryNode> p=hashtable[j].front;
         cout<<"\n";
         printMemNodes(p);
     }
