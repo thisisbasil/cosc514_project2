@@ -261,13 +261,13 @@ int main(int argc, const char * argv[]) {
     string file_name, lines;
 
     int HTSIZe=10;
-    array<shared_ptr<MemoryNode>,10> hashtable;
-    InitHashTable( HTSIZe, hashtable, hashtable[HTSIZe]);
-
+    //array<shared_ptr<MemoryNode>,10> hashtable;
+    //InitHashTable( HTSIZe, hashtable, hashtable[HTSIZe]);
+	array<list<MemoryNode>,10> ht;
     //initially create the 10 processes and assign all of them to the Ready Queue
     for (int k=1; k<11; k++)
     {
-        PCB temp { k, 0, 0, hashtable[k-1] };
+        PCB temp { k, 0, 0, ht[k-1].front };
         ready.add_back(temp);
     }
 
@@ -309,7 +309,8 @@ int main(int argc, const char * argv[]) {
             wait.remove_front();
             disk.add_back(temp);
 
-            shared_ptr<MemoryNode> p = hashtable[disk.front->pid - 1];
+            //shared_ptr<MemoryNode> p = hashtable[disk.front->pid - 1];
+            shared_ptr<MemoryNode> p = ht[disk.front->pid - 1].front;
             file_name.clear();
             file_name = "proc";
             file_name += to_string(disk.front->pid);
@@ -337,9 +338,12 @@ int main(int argc, const char * argv[]) {
 
             lines.clear();
             lines = readLineNFile(file_name, Startline, Endline);
-            addToHashTable(hashtable,disk.front->pid - 1, MemoryNode(disk.front->pid, Pagenum,
-                                                                     lines, Startline, Endline,
-                                                                     time_span_count));
+            //addToHashTable(hashtable,disk.front->pid - 1, MemoryNode(disk.front->pid, Pagenum,
+            //                                                         lines, Startline, Endline,
+            //                                                        time_span_count));
+            ht[disk.front->pid - 1].add_back(MemoryNode(disk.front->pid, Pagenum,
+                                                        lines, Startline, Endline,
+                                                        time_span_count));
             //In the PCB of the process, adjust the program counter
             if (Endline <= 100) disk.front->progrCounter = Endline;
             else if (Endline > 101) disk.front->progrCounter = 100;
@@ -376,7 +380,8 @@ int main(int argc, const char * argv[]) {
     cout<<"\n\nThe contents of the memory for each process-------------------------------------------------------------------------";
     for (int j=0;j<10;j++)
     {
-        shared_ptr<MemoryNode> p=hashtable[j];
+        //shared_ptr<MemoryNode> p=hashtable[j];
+        shared_ptr<MemoryNode> p=ht[j].front;
         cout<<"\n";
         printMemNodes(p);
     }
