@@ -22,126 +22,26 @@ struct MemoryNode //node in a linked list
         int StartLine;
         int EndLine;
         double CPUtime;
-        shared_ptr<MemoryNode> next;
-        shared_ptr<MemoryNode> prev;
+        MemoryNode* next;
+        MemoryNode* prev;
 
         MemoryNode(int _pid, int _pageNum, const string& _readInChars,
-                   int _StartLine, int _EndLine, double _CPUtime,
-                   shared_ptr<MemoryNode> _next = nullptr,
-                   shared_ptr<MemoryNode> _prev = nullptr) :
+                   int _StartLine, int _EndLine, double _CPUtime
+                   ,MemoryNode* _next = nullptr,
+                   MemoryNode* _prev = nullptr
+                   ) :
                 pid(_pid), pageNum(_pageNum), readInChars(_readInChars),
-                StartLine(_StartLine), EndLine(_EndLine), CPUtime(_CPUtime),
-                next(_next), prev(_prev) {}
+                StartLine(_StartLine), EndLine(_EndLine), CPUtime(_CPUtime)
+                ,next(_next), prev(_prev) {}
         MemoryNode() = default;
+
+
     };
 
-struct PCB
-{
-    int pid; //process ID [1..10]
-    int state; // process state [1..9]
-    int progrCounter; // the number of a line which is currenly being read in from the file
-    shared_ptr<MemoryNode> headMem;
-    shared_ptr<PCB> next;
-    shared_ptr<PCB> prev;
 
-    PCB() = default;
-    PCB(int _pid, int _state, int _progrCounter,
-        shared_ptr<MemoryNode> _headMem = nullptr,
-        shared_ptr<PCB> _next = nullptr,
-        shared_ptr<PCB> _prev = nullptr) :
-        pid(_pid), state(_state), progrCounter(_progrCounter),
-        headMem(_headMem), next(_next), prev(_prev) {}
-};
-
-template <typename T>
-struct list
-{
-    shared_ptr<T> front;
-    shared_ptr<T> back;
-    int count;
-    list() : front(nullptr), back(nullptr), count(0) { }
-    void add_back(T node)
+void printMemNodes(MemoryNode* head)//print the list
     {
-        shared_ptr<T> newnode = make_shared<T>(node);
-        if (back == nullptr)
-        {
-            back = newnode;
-            front = back;
-        }
-        else
-        {
-            back->next = newnode;
-            newnode->prev = back;
-            back = newnode;
-        }
-        count++;
-    }
-
-    void add_front(T node)
-    {
-        shared_ptr<T> newnode = make_shared(node);
-        if (front == nullptr)
-        {
-            front = newnode;
-            back = front;
-        }
-        else
-        {
-            front->prev = newnode;
-            newnode->next = front;
-            front = newnode;
-        }
-        count++;
-    }
-
-    void remove_front()
-    {
-        if (front == nullptr) return;
-
-        if (front == back)
-        {
-            front.reset();
-            back.reset();
-        }
-        else front = front->next;
-        count--;
-    }
-
-    void remove_back()
-    {
-        if (back == nullptr) return;
-        if (front == back)
-        {
-            front.reset();
-            back.reset();
-        }
-        else back = back->prev;
-        count--;
-    }
-};
-
-string printPCB(const list<PCB>& _list)
-    {
-        string out;
-        //PCB  *p;
-        shared_ptr<PCB> p;
-        p=_list.front;
-        int index=0;
-
-        if (p == nullptr) { out="E"; return out; }
-        else{
-            while (p->next!=nullptr)
-            {   out+=to_string(p->pid); out+="->";
-                p=p->next; index++;
-                }
-                out+=to_string(p->pid);
-        }
-        return out;
-    }
-
-void printMemNodes(shared_ptr<MemoryNode> head)//print the list
-    {
-        shared_ptr<MemoryNode> p = head;
+        MemoryNode* p = head;
         int index=0;
 
         if (p==nullptr) {cout<<"E"; return;}//Empty
@@ -159,6 +59,155 @@ void printMemNodes(shared_ptr<MemoryNode> head)//print the list
         }
 
     }
+
+
+
+
+struct PCB
+{
+    int pid; //process ID [1..10]
+    int state; // process state [1..9]
+    int progrCounter; // the number of a line which is currenly being read in from the file
+    MemoryNode* headMem;
+
+    PCB() = default;
+
+    PCB(int _pid, int _state, int _progrCounter,
+        MemoryNode* _headMem = nullptr) :
+        pid(_pid), state(_state), progrCounter(_progrCounter), headMem(_headMem) {}
+
+    friend ostream& operator<<(ostream& out, const PCB& other)
+    {
+        out << other.pid;
+        return out;
+    }
+};
+
+template <typename T>
+class list
+{
+public:
+    struct NODE
+    {
+        T val;
+        NODE* next;
+        NODE* prev;
+        NODE(T _val) : val(_val), next(nullptr), prev (nullptr) {}
+    };
+    NODE* front;
+    NODE* back;
+
+    friend ostream& operator<<(ostream& out, const list& other)
+    {
+        NODE* p = other.front;
+        if (p == nullptr) out << 'E';
+        else
+        {
+            out << ' ';
+            while (p)
+            {
+                out << p->val;
+                if (p->next) out << "->";
+                p = p->next;
+            }
+        }
+        return out;
+    }
+
+    int count;
+    list() : front(nullptr), back(nullptr), count(0) { }
+    list(const list&) = delete;
+    list(list&&) = delete;
+    list& operator=(const list&) = delete;
+    list& operator=(list&&) = delete;
+    void add_back(T _val)
+    {
+        NODE* newnode = new NODE(_val);
+        if (count == 0)
+        {
+            front = back = newnode;
+        }
+        else
+        {
+            back->next = newnode;
+            newnode->prev = back;
+            back = newnode;
+        }
+        count++;
+    }
+
+    void add_front(T _val)
+    {
+        NODE* newnode = new NODE(_val);
+        if (front == nullptr)
+        {
+            front = back = newnode;
+        }
+        else
+        {
+            front->prev = newnode;
+            newnode->next = front;
+            front = newnode;
+        }
+        count++;
+    }
+
+    void remove_front()
+    {
+        if (front == nullptr) return;
+        NODE* newhead = front->next;
+        delete front;
+        front = newhead;
+        if (front) front->prev = nullptr;
+        count--;
+        if (count == 0) back = front;
+    }
+
+    void remove_back()
+    {
+        if (back == nullptr) return;
+        NODE* newback = back->prev;
+        delete back;
+        back = newback;
+        if (back) back->next = nullptr;
+        count--;
+        if (count == 0) front = back;
+    }
+
+    T& peek_front() { return front->val; }
+    T& peek_back() { return back->val;}
+
+    ~list()
+    {
+        if (front == nullptr) return;
+        NODE* curr = front;
+        while (curr)
+        {
+            NODE* temp = curr->next;
+            delete curr;
+            curr = temp;
+        }
+    }
+};
+
+
+
+void printMemNodes(const array<MemoryNode*, 10>& hashtable)
+{
+    for (const auto& i : hashtable)
+    {
+        //cout << j << endl;
+    }
+}
+
+MemoryNode* InitHashTable(int HTSIZe, array<MemoryNode*,10>& hashtable)
+{
+    for(auto& j : hashtable)
+    {
+        j = nullptr;
+    }
+   return +hashtable[HTSIZe];
+}
 
 // code for A is 65, so have a base of 64
 inline char determineToken(int procNum)//used in createFiles() only
@@ -214,42 +263,61 @@ string readLineNFile(string file_name, int startLine, int endLine)
     return lines;
 }
 
+void addToHashTable(array<MemoryNode*, 10>& ht, int idx, const MemoryNode& mn)
+{
+    MemoryNode* newnode = new MemoryNode(mn.pid, mn.pageNum, mn.readInChars, mn.StartLine, mn.EndLine, mn.CPUtime);
+    if (ht[idx] == nullptr)
+    {
+        ht[idx] = newnode;
+    }
+    else
+    {
+        MemoryNode* temp = ht[idx];
+        while (temp->next != nullptr) temp = temp->next;
+        newnode->prev = temp;
+        temp->next = newnode;
+    }
+}
+
+//void printInstanceForTable(PCB * hReady,PCB *hCPU,PCB *hWait,PCB *hdisk,PCB *hDone, double time)
 void printInstanceForTable(const list<PCB>& ready, const list<PCB>& cpu, const list<PCB>& wait,
-                           const list<PCB>& disk, const list<PCB>& done, double time)
+                          const list<PCB>& disk, const list<PCB>& done, double time)
 {
     cout<<"\n";
-    cout<<left
-    << setw(15) << time
-    << setw(30) << printPCB(ready)
-    << setw(10) << printPCB(cpu)
-    << setw(30) << printPCB(wait)
-    << setw(10) << printPCB(disk)
-    << setw(10) << printPCB(done) ;
+    cout << left
+         << time
+         << setw(26) << ready
+         << setw(40) << cpu
+         << setw(30) << wait
+         << setw(10) << disk
+         << setw(10) << done ;
 
 }
 
 int main(int argc, const char * argv[]) {
+
     list<PCB> ready, cpu, wait, disk, done, mem;
 
     createFiles(); //create 10 files for the 10 processes, to be read in later in the program
     string file_name, lines;
 
     int HTSIZe=10;
-	array<list<MemoryNode>,10> hashtable;
+    array<MemoryNode*,10> hashtable;
+    hashtable[HTSIZe] = InitHashTable(HTSIZe, hashtable);
+
     //initially create the 10 processes and assign all of them to the Ready Queue
     for (int k=1; k<11; k++)
     {
-        PCB temp { k, 0, 0, hashtable[k-1].front };
+        PCB temp { k, 1, 0, hashtable[k-1] };
         ready.add_back(temp);
     }
-
 
     //print table header
     cout<<"\n------------------------------------------------------------------------------------------------------------------";
     cout<<left
-    << setw(15) <<"\nClockStamp"
-    << setw(30) <<"Ready"
-    << setw(10) <<"CPU"
+    << setw(30) <<"\nClockStamp"
+    << setw(40) <<"Ready"
+    << setw(30) <<"CPU"
     << setw(30) <<"Wait"
     << setw(10) <<"Disk"
     << setw(10) <<"Done" ;
@@ -267,75 +335,83 @@ int main(int argc, const char * argv[]) {
 
         if (disk.count > 0)
         {
-            PCB temp { disk.front->pid, 1, disk.front->progrCounter,
-                     disk.front->headMem };
+            PCB temp(disk.peek_front().pid, 1, disk.peek_front().progrCounter,
+                     disk.peek_front().headMem);
             ready.add_back(temp);
             disk.remove_front();
 
-        } else { cout << "Nothing to remove" << endl; }
-        
+        } //else { cout << "Nothing to remove" << endl; }
+
         if (wait.count > 0 && disk.count == 0)
         {
-            PCB temp { wait.front->pid, 4, wait.front->progrCounter,
-                       wait.front->headMem };
+            PCB temp { wait.peek_front().pid, 4, wait.peek_front().progrCounter,
+                       wait.peek_front().headMem };
             wait.remove_front();
             disk.add_back(temp);
 
+            MemoryNode* p = hashtable[disk.peek_front().pid - 1];
             file_name.clear();
-            file_name = "proc"  + to_string(disk.front->pid) + ".txt";
+            file_name = "proc";
+            file_name += to_string(disk.peek_front().pid);
+            file_name += ".txt";
 
             int Startline = 0, Endline = 0, Pagenum = 0;
-            if (hashtable[disk.front->pid - 1].front == nullptr)
+            if (p == nullptr)
             {
                 Startline = 1;
                 Pagenum = 0;
             }
-            else if (hashtable[disk.front->pid - 1].front->next == nullptr)
+            else if (p->next == nullptr)
             {
-                Startline = hashtable[disk.front->pid - 1].front->EndLine + 1;
-                Pagenum = hashtable[disk.front->pid - 1].front->pageNum + 1;
+                Startline = p->EndLine + 1;
+                Pagenum = p->pageNum + 1;
             }
-            else 
+            else
             {
-                
-                Startline = hashtable[disk.front->pid - 1].back->EndLine + 1;
-                Pagenum = hashtable[disk.front->pid - 1].back->pageNum + 1;
-                Endline = Startline + 7;
-            }
+                while (p->next != nullptr) p = p->next;
+
+                Startline = p->EndLine + 1;
+                Pagenum = p->pageNum + 1;
+             }
+             Endline = Startline + 7;
+
 
             lines.clear();
             lines = readLineNFile(file_name, Startline, Endline);
-            hashtable[disk.front->pid - 1].add_back(MemoryNode(disk.front->pid, Pagenum,
-                                                        lines, Startline, Endline,
-                                                        time_span_count));
+            addToHashTable(hashtable,disk.peek_front().pid - 1, MemoryNode(disk.peek_front().pid, Pagenum,
+                                                                     lines, Startline, Endline,
+                                                                     time_span_count));
+
             //In the PCB of the process, adjust the program counter
-            if (Endline <= 100) disk.front->progrCounter = Endline;
-            else if (Endline > 101) disk.front->progrCounter = 100;
+            if (Endline <= 100) disk.peek_front().progrCounter = Endline;
+            else if (Endline > 101) disk.peek_front().progrCounter = 100;
         }
 
-        if (cpu.count > 0 && cpu.front->progrCounter != 100)
+        if (cpu.count > 0 && cpu.peek_front().progrCounter != 100)
         {
-            PCB temp { cpu.front->pid, 3, cpu.front->progrCounter,
-                       cpu.front->headMem };
+            PCB temp { cpu.peek_front().pid, 3, cpu.peek_front().progrCounter,
+                       cpu.peek_front().headMem };
             cpu.remove_front();
             wait.add_back(temp);
         }
 
-         if (cpu.count > 0 && cpu.front->progrCounter >= 100)
+         if (cpu.count > 0 && cpu.peek_front().progrCounter >= 100)
          {
-            PCB temp { cpu.front->pid, 5, cpu.front->progrCounter,
-                       cpu.front->headMem };
+            PCB temp { cpu.peek_front().pid, 5, cpu.peek_front().progrCounter,
+                       cpu.peek_front().headMem };
             cpu.remove_front();
             done.add_back(temp);
          }
 
          if (cpu.count == 0 && ready.count > 0)
          {
-            PCB temp { ready.front->pid, 2, ready.front->progrCounter,
-                       ready.front->headMem };
+            PCB temp { ready.peek_front().pid, 2, ready.peek_front().progrCounter,
+                       ready.peek_front().headMem };
             ready.remove_front();
             cpu.add_back(temp);
          }
+
+         printInstanceForTable(ready, cpu, wait, disk, done, time_span_count);
          if (done.count == 10) break;
     } //end Pipeline
 
@@ -344,12 +420,13 @@ int main(int argc, const char * argv[]) {
     cout<<"\n\nThe contents of the memory for each process-------------------------------------------------------------------------";
     for (int j=0;j<10;j++)
     {
+       MemoryNode* p=hashtable[j];
         cout<<"\n";
-        printMemNodes(hashtable[j].front);
+        printMemNodes(p);
+
     }
 
 
     cout<<"\n\nBYE!\n";
-
     return 0;
 }
