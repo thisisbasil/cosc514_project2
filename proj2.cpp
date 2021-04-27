@@ -6,7 +6,6 @@
 #include <iostream>
 #include <chrono>
 #include <fstream> //ofstream/read in files
-#include <deque>
 #include <array>
 #include <iomanip>
 #include <memory>
@@ -28,14 +27,11 @@ struct MemoryNode //node in a linked list
         MemoryNode(int _pid, int _pageNum, const string& _readInChars,
                    int _StartLine, int _EndLine, double _CPUtime
                    ,MemoryNode* _next = nullptr,
-                   MemoryNode* _prev = nullptr
-                   ) :
+                   MemoryNode* _prev = nullptr) :
                 pid(_pid), pageNum(_pageNum), readInChars(_readInChars),
                 StartLine(_StartLine), EndLine(_EndLine), CPUtime(_CPUtime)
                 ,next(_next), prev(_prev) {}
         MemoryNode() = default;
-
-
     };
 
 
@@ -43,10 +39,11 @@ void printMemNodes(MemoryNode* head)//print the list
     {
         MemoryNode* p = head;
         int index=0;
-
+		cout << endl;
         if (p==nullptr) {cout<<"E"; return;}//Empty
         else
-        { cout<<"\n";
+        { 
+			cout<<"\n";
             while (p->next!=nullptr)
             {
                 cout<<"pid: "<<p->pid<<" PageNum "<<p->pageNum<<" contains " <<p->readInChars<<" in lines " <<p->StartLine <<"-" << p->EndLine <<" read at " <<p->CPUtime<<"\n";
@@ -116,6 +113,8 @@ public:
 
     int count;
     list() : front(nullptr), back(nullptr), count(0) { }
+
+	// disallow copyinst and moving
     list(const list&) = delete;
     list(list&&) = delete;
     list& operator=(const list&) = delete;
@@ -189,16 +188,6 @@ public:
         }
     }
 };
-
-
-
-void printMemNodes(const array<MemoryNode*, 10>& hashtable)
-{
-    for (const auto& i : hashtable)
-    {
-        //cout << j << endl;
-    }
-}
 
 MemoryNode* InitHashTable(int HTSIZe, array<MemoryNode*,10>& hashtable)
 {
@@ -279,7 +268,6 @@ void addToHashTable(array<MemoryNode*, 10>& ht, int idx, const MemoryNode& mn)
     }
 }
 
-//void printInstanceForTable(PCB * hReady,PCB *hCPU,PCB *hWait,PCB *hdisk,PCB *hDone, double time)
 void printInstanceForTable(const list<PCB>& ready, const list<PCB>& cpu, const list<PCB>& wait,
                           const list<PCB>& disk, const list<PCB>& done, double time)
 {
@@ -340,7 +328,7 @@ int main(int argc, const char * argv[]) {
             ready.add_back(temp);
             disk.remove_front();
 
-        } //else { cout << "Nothing to remove" << endl; }
+        }
 
         if (wait.count > 0 && disk.count == 0)
         {
@@ -351,9 +339,7 @@ int main(int argc, const char * argv[]) {
 
             MemoryNode* p = hashtable[disk.peek_front().pid - 1];
             file_name.clear();
-            file_name = "proc";
-            file_name += to_string(disk.peek_front().pid);
-            file_name += ".txt";
+            file_name = "proc" + to_string(disk.peek_front().pid) + ".txt";
 
             int Startline = 0, Endline = 0, Pagenum = 0;
             if (p == nullptr)
@@ -418,13 +404,11 @@ int main(int argc, const char * argv[]) {
 
     //print the contents of the memory nodes as well
     cout<<"\n\nThe contents of the memory for each process-------------------------------------------------------------------------";
-    for (int j=0;j<10;j++)
-    {
-       MemoryNode* p=hashtable[j];
-        cout<<"\n";
-        printMemNodes(p);
 
-    }
+	for (auto* entry : hashtable)
+	{
+		printMemNodes(entry);
+	}
 
 
     cout<<"\n\nBYE!\n";
