@@ -73,11 +73,6 @@ struct PCB
         MemoryNode* _headMem = nullptr) :
         pid(_pid), state(_state), progrCounter(_progrCounter), headMem(_headMem) {}
 
-    friend ostream& operator<<(ostream& out, const PCB& other)
-    {
-        out << other.pid;
-        return out;
-    }
 };
 
 template <typename T>
@@ -93,23 +88,6 @@ public:
     };
     NODE* front;
     NODE* back;
-
-    friend ostream& operator<<(ostream& out, const list& other)
-    {
-        NODE* p = other.front;
-        if (p == nullptr) out << 'E';
-        else
-        {
-            out << ' ';
-            while (p)
-            {
-                out << p->val;
-                if (p->next) out << "->";
-                p = p->next;
-            }
-        }
-        return out;
-    }
 
     int count;
     list() : front(nullptr), back(nullptr), count(0) { }
@@ -195,7 +173,7 @@ MemoryNode* InitHashTable(int HTSIZe, array<MemoryNode*,10>& hashtable)
     {
         j = nullptr;
     }
-   return +hashtable[HTSIZe];
+   return hashtable[HTSIZe];
 }
 
 // code for A is 65, so have a base of 64
@@ -268,17 +246,34 @@ void addToHashTable(array<MemoryNode*, 10>& ht, int idx, const MemoryNode& mn)
     }
 }
 
+string printPCB(const list<PCB>& temp)
+{
+	string out;
+	auto* p = temp.front;
+	if (p == nullptr) out = 'E';
+	else
+	{
+		while(p->next != nullptr)
+		{
+			out += to_string(p->val.pid) + "->";
+			p = p->next;
+		}
+		out += to_string(p->val.pid);
+	}
+	return out;
+}
+
 void printInstanceForTable(const list<PCB>& ready, const list<PCB>& cpu, const list<PCB>& wait,
                           const list<PCB>& disk, const list<PCB>& done, double time)
 {
     cout<<"\n";
     cout << left
-         << time
-         << setw(26) << ready
-         << setw(40) << cpu
-         << setw(30) << wait
-         << setw(10) << disk
-         << setw(10) << done ;
+         << setw(15) << time
+         << setw(30) << printPCB(ready)
+         << setw(10) << printPCB(cpu)
+         << setw(30) << printPCB(wait)
+         << setw(10) << printPCB(disk)
+         << setw(10) << printPCB(done);
 
 }
 
@@ -303,9 +298,9 @@ int main(int argc, const char * argv[]) {
     //print table header
     cout<<"\n------------------------------------------------------------------------------------------------------------------";
     cout<<left
-    << setw(30) <<"\nClockStamp"
-    << setw(40) <<"Ready"
-    << setw(30) <<"CPU"
+    << setw(15) <<"\nClockStamp"
+    << setw(30) <<"Ready"
+    << setw(10) <<"CPU"
     << setw(30) <<"Wait"
     << setw(10) <<"Disk"
     << setw(10) <<"Done" ;
