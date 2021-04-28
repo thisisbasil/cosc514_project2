@@ -9,6 +9,7 @@
 #include <array>
 #include <iomanip>
 #include <memory>
+#include <random>
 using namespace std;
 using namespace std::chrono; //clock
 
@@ -182,6 +183,15 @@ inline char determineToken(int procNum)//used in createFiles() only
     return static_cast<char>(64+procNum);
 }
 
+// generates a random number, using a uniform distribution,
+// when needed, between min and max
+int rng(int min = 0, int max = 100)
+{
+    static std::default_random_engine re {};
+    static std::uniform_int_distribution<int> dist;
+    return dist(re, std::uniform_int_distribution<int>::param_type {min, max});
+}
+
 void createFiles()     //create files (for the 10 processes) to be opened and read in later
 {
     ofstream myfile;
@@ -307,6 +317,8 @@ int main(int argc, const char * argv[]) {
 
     steady_clock::time_point t1 = steady_clock::now(); //grab out initial time stamp
     printInstanceForTable(ready,cpu,wait,disk,done, 0);
+	int CPUdelay = rng(1,5);
+	cout << " CPU delay: " << CPUdelay;
 
     //Process management Pipeline:
     while ( true )
@@ -368,20 +380,24 @@ int main(int argc, const char * argv[]) {
             else if (Endline > 101) disk.peek_front().progrCounter = 100;
         }
 
-        if (cpu.count > 0 && cpu.peek_front().progrCounter != 100)
+        if (cpu.count > 0 && cpu.peek_front().progrCounter != 100 && CPUdelay == 0)
         {
             PCB temp { cpu.peek_front().pid, 3, cpu.peek_front().progrCounter,
                        cpu.peek_front().headMem };
             cpu.remove_front();
             wait.add_back(temp);
+			CPUdelay = rng(1,5);
+			cout << " CPU delay: " << CPUdelay;
         }
 
-         if (cpu.count > 0 && cpu.peek_front().progrCounter >= 100)
+         if (cpu.count > 0 && cpu.peek_front().progrCounter >= 100 && CPUdelay == 0)
          {
             PCB temp { cpu.peek_front().pid, 5, cpu.peek_front().progrCounter,
                        cpu.peek_front().headMem };
             cpu.remove_front();
             done.add_back(temp);
+			CPUdelay = rng(1,5);
+			cout << " CPUdelay: " << CPUdelay;
          }
 
          if (cpu.count == 0 && ready.count > 0)
@@ -393,7 +409,8 @@ int main(int argc, const char * argv[]) {
          }
 
          printInstanceForTable(ready, cpu, wait, disk, done, time_span_count);
-         if (done.count == 10) break;
+         CPUdelay--;
+		 if (done.count == 10) break;
     } //end Pipeline
 
 
