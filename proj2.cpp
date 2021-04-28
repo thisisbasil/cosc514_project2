@@ -1,7 +1,7 @@
 //  COSC514 Project2 Bowie State
 //  Group: Sophie Johnson-Shapoval, Basil Huffman, Fekadu Urga
 //  Program description is in the accompanying design document (slides) and a report
-
+#include <cassert>
 #include <string>
 #include <iostream>
 #include <chrono>
@@ -77,10 +77,13 @@ struct PCB // this represents each of the 10 processes, these nodes are moved am
 
 };
 
+// double ended, double linked list
+// allows for O(1) insertions and deletions at beginning and end
 template <typename T>
 class list
 {
 public:
+	
     struct NODE
     {
         T val;
@@ -99,6 +102,7 @@ public:
     list(list&&) = delete;
     list& operator=(const list&) = delete;
     list& operator=(list&&) = delete;
+
     void add_back(T _val)
     {
         NODE* newnode = new NODE(_val);
@@ -153,9 +157,25 @@ public:
         if (count == 0) front = back;
     }
 
+	// provide a means to access first and last node 
     T& peek_front() { return front->val; }
     T& peek_back() { return back->val;}
 
+	// allow access to individual elements
+	T& operator[](int idx)
+	{
+		assert(idx >= 0 && idx < count);
+
+		// short circuit beginning and end, O(1)
+		if (idx == 0) return front->val;
+		if (idx == (count - 1)) return back->val;
+		
+		NODE* curr = front;
+		while(idx--) curr = curr->next;
+		return curr->val;
+	}
+
+	// clean up memory when finished
     ~list()
     {
         if (front == nullptr) return;
@@ -191,9 +211,9 @@ int rng(int min = 0, int max = 100)
 //followed by the line number for example the 1st line in A's file is A1A1A1A1A1. Each line is 10 characters long
 
 {
-    static std::default_random_engine re {};
-    static std::uniform_int_distribution<int> dist;
-    return dist(re, std::uniform_int_distribution<int>::param_type {min, max}); 
+    static default_random_engine re {};
+    static uniform_int_distribution<int> dist;
+    return dist(re, uniform_int_distribution<int>::param_type {min, max}); 
 }
 
 void createFiles()     //create files (for the 10 processes) to be opened and read in later in the pipeline. 
